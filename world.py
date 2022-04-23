@@ -57,12 +57,11 @@ class Player:
         # get pressed keys
         key = pygame.key.get_pressed()
         # jump
-        if key[pygame.K_SPACE] and self.jumped is False:
+        if key[pygame.K_SPACE] and self.jumped is False and self.on_ground is True:
             self.velY = -15
             self.jumped = True
         if key[pygame.K_SPACE] is False:
             self.jumped = False
-
         # move left
         if key[pygame.K_a]:
             dx -= 5
@@ -99,6 +98,7 @@ class Player:
         dy += self.velY
 
         # check for collision
+        self.on_ground = False
         for tile in world.tile_list:
             # check for collision in x direction
             if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
@@ -113,6 +113,7 @@ class Player:
                 elif self.velY >= 0:
                     dy = tile[1].top - self.rect.bottom
                     self.velY = 0
+                    self.on_ground = True
 
         # update player coordinates
         self.rect.x += dx
