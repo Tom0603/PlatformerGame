@@ -1,4 +1,6 @@
 import pygame
+import pickle
+from os import path
 
 pygame.init()
 
@@ -15,15 +17,17 @@ pygame.display.set_caption("Platformer")
 tile_size = 40
 game_over = 0
 main_menu = True
+level = 1
 
 # load images
 sky_img = pygame.transform.scale(pygame.image.load('Assets/bg.png'), (screen_width, screen_height))
 sun_img = pygame.transform.scale(pygame.image.load('Assets/sun.png'), (50 * 1.5, 50 * 1.5))
 cloud1_img = pygame.transform.scale(pygame.image.load('Assets/cloud1.png'), (128 * 1.5, 71 * 1.5))
 cloud2_img = pygame.transform.scale(pygame.image.load('Assets/cloud2.png'), (128 * 1.5, 71 * 1.5))
-restart_img = pygame.transform.scale(pygame.image.load('Assets/restart_btn.png'), ((120 * 2), 42 * 2))
+restart_img = pygame.transform.scale(pygame.image.load('Assets/restart_btn.png'), ((120 * 2), (42 * 2)))
 start_img = pygame.image.load('Assets/start_btn.png')
 exit_img = pygame.image.load('Assets/exit_btn.png')
+
 
 class Button:
     def __init__(self, x, y, image):
@@ -244,38 +248,22 @@ class Lava(pygame.sprite.Sprite):
         self.rect.y = y
 
 
-world_data = [
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 1],
-    [1, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 2, 0, 2, 0, 0, 0, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 2, 4, 4, 4, 4, 4, 4, 4, 4, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1]
-]
-
 player = Player(100, screen_height - 120)
 
 blob_group = pygame.sprite.Group()
 lava_group = pygame.sprite.Group()
 
+# load in level data and create world
+if path.exists(f'level{level}_data'):
+    pickle_in = open(f'level{level}_data', 'rb')
+    world_data = pickle.load(pickle_in)
 world = World(world_data)
 
 # buttons
 restart_button = Button(screen_width // 2 - 120, screen_height // 2 + 100, restart_img)
 start_button = Button(screen_width // 2 - 350, screen_height // 2 - 100, start_img)
-exit_button = Button(screen_width // 2 + 150, screen_height // 2 - 100, exit_img)
+exit_button_menu = Button(screen_width // 2 + 150, screen_height // 2 - 100, exit_img)
+exit_button = Button(screen_width // 2 - 120, screen_height // 2 - 100, pygame.transform.scale(exit_img, (240, 100 )))
 
 
 run = True
@@ -289,7 +277,7 @@ while run:
     screen.blit(cloud2_img, (screen_width / 1.5, screen_height / 5))
 
     if main_menu is True:
-        if exit_button.draw():
+        if exit_button_menu.draw():
             run = False
         if start_button.draw():
             main_menu = False
@@ -306,6 +294,8 @@ while run:
 
         # if player has died
         if game_over == -1:
+            if exit_button.draw():
+                run = False
             if restart_button.draw():
                 player.reset(100, screen_height - 120)
                 game_over = 0
