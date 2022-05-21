@@ -1,7 +1,10 @@
 import pygame
 import pickle
+from pygame import mixer
 from os import path
 
+pygame.mixer.pre_init(44100, -16, 2, 512)
+mixer.init()
 pygame.init()
 
 clock = pygame.time.Clock()
@@ -37,6 +40,16 @@ cloud2_img = pygame.transform.scale(pygame.image.load('Assets/cloud2.png'), (128
 restart_img = pygame.transform.scale(pygame.image.load('Assets/restart_btn.png'), ((120 * 2), (42 * 2)))
 start_img = pygame.image.load('Assets/start_btn.png')
 exit_img = pygame.image.load('Assets/exit_btn.png')
+
+# load sounds
+pygame.mixer.music.load('Assets/music.wav')
+pygame.mixer.music.play(-1, 0.0, 5000)
+coin_sound = pygame.mixer.Sound('Assets/coin.wav')
+coin_sound.set_volume(0.5)
+jump_sound = pygame.mixer.Sound('Assets/jump.wav')
+jump_sound.set_volume(0.5)
+game_over_sound = pygame.mixer.Sound('Assets/game_over.wav')
+game_over_sound.set_volume(0.5)
 
 
 def draw_text(text, font, text_collour, x, y):
@@ -103,6 +116,7 @@ class Player:
             key = pygame.key.get_pressed()
             # jump
             if key[pygame.K_SPACE] and self.jumped is False and self.on_ground is True:
+                jump_sound.play()
                 self.velY = -15
                 self.jumped = True
             if key[pygame.K_SPACE] is False:
@@ -163,10 +177,12 @@ class Player:
             # check for collision with enemies
             if pygame.sprite.spritecollide(self, blob_group, False):
                 game_over = -1
+                game_over_sound.play()
 
             # check for collision with lava
             if pygame.sprite.spritecollide(self, lava_group, False):
                 game_over = -1
+                game_over_sound.play()
 
             # check for collision with exit
             if pygame.sprite.spritecollide(self, exit_group, False):
@@ -355,6 +371,7 @@ while run:
             # check if a coin has been collected
             if pygame.sprite.spritecollide(player, coin_group, True):
                 score += 1
+                coin_sound.play()
             draw_text('X ' + str(score), font_score, white, tile_size - 10, 10)
 
         blob_group.draw(screen)
