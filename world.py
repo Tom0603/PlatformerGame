@@ -24,8 +24,8 @@ font_score = pygame.font.SysFont('Bauhaus 93', 30)
 tile_size = 40
 game_over = 0
 main_menu = True
-level = 1
-max_levels = 2
+level = 3
+max_levels = 3
 score = 0
 
 # define colours
@@ -242,6 +242,7 @@ class World:
         for row in data:
             col_count = 0
             for tile in row:
+                # dirt
                 if tile == 1:
                     img = pygame.transform.scale(dirt_img, (tile_size, tile_size))
                     img_rect = img.get_rect()
@@ -249,6 +250,7 @@ class World:
                     img_rect.y = row_count * tile_size
                     tile = (img, img_rect)
                     self.tile_list.append(tile)
+                # grass
                 if tile == 2:
                     img = pygame.transform.scale(grass_img, (tile_size, tile_size))
                     img_rect = img.get_rect()
@@ -256,18 +258,34 @@ class World:
                     img_rect.y = row_count * tile_size
                     tile = (img, img_rect)
                     self.tile_list.append(tile)
+                # blobs (enemies)
                 if tile == 3:
                     blob = Enemy(col_count * tile_size, row_count * tile_size + 10)
                     blob_group.add(blob)
+                # lava
                 if tile == 4:
                     lava = Lava(col_count * tile_size, row_count * tile_size + tile_size // 2)
                     lava_group.add(lava)
+                # exit
                 if tile == 5:
                     exit = Exit(col_count * tile_size, row_count * tile_size - (tile_size // 2))
                     exit_group.add(exit)
+                # coins
                 if tile == 6:
                     coin = Coin(col_count * tile_size + (tile_size // 2), row_count * tile_size - (tile_size // 2))
                     coin_group.add(coin)
+                # permanent platforms
+                if tile == 7:
+                    platform = Platform(col_count * tile_size, row_count * tile_size, 0, 0)
+                    platform_group.add(platform)
+                # horizontally moving platforms
+                if tile == 8:
+                    platform = Platform(col_count * tile_size, row_count * tile_size, 1, 0)
+                    platform_group.add(platform)
+                # vertically moving platforms
+                if tile == 9:
+                    platform = Platform(col_count * tile_size, row_count * tile_size, 0, 1)
+                    platform_group.add(platform)
                 col_count += 1
             row_count += 1
 
@@ -289,6 +307,28 @@ class Enemy(pygame.sprite.Sprite):
 
     def update(self):
         self.rect.x += self.move_direction
+        self.move_counter += 1
+        if abs(self.move_counter > 80):
+            self.move_direction *= -1
+            self.move_counter *= -1
+
+
+class Platform(pygame.sprite.Sprite):
+    def __init__(self, x, y, move_x, move_y):
+        pygame.sprite.Sprite.__init__(self)
+        img = pygame.image.load('Assets/platform.png')
+        self.image = pygame.transform.scale(img, (tile_size, tile_size // 2))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.move_counter = 0
+        self.move_direction = 1
+        self.move_x = move_x
+        self.move_y = move_y
+
+    def update(self):
+        self.rect.x += self.move_direction * self.move_x
+        self.rect.y += self.move_direction * self.move_y
         self.move_counter += 1
         if abs(self.move_counter > 80):
             self.move_direction *= -1
@@ -327,6 +367,7 @@ class Exit(pygame.sprite.Sprite):
 player = Player(100, screen_height - 120)
 
 blob_group = pygame.sprite.Group()
+platform_group = pygame.sprite.Group()
 lava_group = pygame.sprite.Group()
 exit_group = pygame.sprite.Group()
 coin_group = pygame.sprite.Group()
@@ -367,6 +408,7 @@ while run:
 
         if game_over == 0:
             blob_group.update()
+            platform_group.update()
             # update score
             # check if a coin has been collected
             if pygame.sprite.spritecollide(player, coin_group, True):
@@ -375,6 +417,7 @@ while run:
             draw_text('X ' + str(score), font_score, white, tile_size - 10, 10)
 
         blob_group.draw(screen)
+        platform_group.draw(screen)
         lava_group.draw(screen)
         coin_group.draw(screen)
         exit_group.draw(screen)
